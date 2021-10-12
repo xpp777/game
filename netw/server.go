@@ -2,8 +2,8 @@ package netw
 
 import (
 	"fmt"
-	"game-ws/global"
-	"game-ws/iface"
+	"game/global"
+	"game/iface"
 	"net/http"
 	"sync/atomic"
 	"time"

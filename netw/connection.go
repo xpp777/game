@@ -3,8 +3,8 @@ package netw
 import (
 	"context"
 	"errors"
-	"game-ws/global"
-	"game-ws/iface"
+	"game/global"
+	"game/iface"
 	"net"
 	"sync"
 	"time"

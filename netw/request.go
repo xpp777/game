@@ -1,6 +1,6 @@
 package netw
 
-import "game-ws/iface"
+import "game/iface"
 
 //Request 请求
 type Request struct {

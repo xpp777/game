@@ -1,8 +1,8 @@
 package global
 
 import (
-	"game-ws/config"
-	"game-ws/iface"
+	"game/config"
+	"game/iface"
 )
 
 var (

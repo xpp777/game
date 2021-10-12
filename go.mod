@@ -1,4 +1,4 @@
-module game-ws
+module game
 
 go 1.16
 

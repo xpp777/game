@@ -1,8 +1,8 @@
 package netw
 
 import (
-	"game-ws/global"
-	"game-ws/iface"
+	"game/global"
+	"game/iface"
 	"strconv"
 
 	"go.uber.org/zap"

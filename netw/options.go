@@ -1,6 +1,6 @@
 package netw
 
-import "game-ws/iface"
+import "game/iface"
 
 type Option func(s *Server)
 

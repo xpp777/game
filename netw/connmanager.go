@@ -2,8 +2,8 @@ package netw
 
 import (
 	"errors"
-	"game-ws/global"
-	"game-ws/iface"
+	"game/global"
+	"game/iface"
 	"sync"
 	"time"
 )
