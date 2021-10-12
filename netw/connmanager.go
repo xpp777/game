@@ -2,10 +2,11 @@ package netw
 
 import (
 	"errors"
-	"game/global"
-	"game/iface"
 	"sync"
 	"time"
+
+	"github.com/xiaomingping/game/global"
+	"github.com/xiaomingping/game/iface"
 )
 
 // ConnManager 连接管理模块

@@ -3,7 +3,8 @@ package netw
 import (
 	"bytes"
 	"encoding/binary"
-	"game/iface"
+
+	"github.com/xiaomingping/game/iface"
 )
 
 //DataPack 封包拆包类实例，暂时不需要成员

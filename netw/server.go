@@ -2,11 +2,12 @@ package netw
 
 import (
 	"fmt"
-	"game/global"
-	"game/iface"
 	"net/http"
 	"sync/atomic"
 	"time"
+
+	"github.com/xiaomingping/game/global"
+	"github.com/xiaomingping/game/iface"
 
 	"go.uber.org/zap"
 

@@ -3,11 +3,12 @@ package netw
 import (
 	"context"
 	"errors"
-	"game/global"
-	"game/iface"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/xiaomingping/game/global"
+	"github.com/xiaomingping/game/iface"
 
 	"go.uber.org/zap"
 

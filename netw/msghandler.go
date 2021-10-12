@@ -1,9 +1,10 @@
 package netw
 
 import (
-	"game/global"
-	"game/iface"
 	"strconv"
+
+	"github.com/xiaomingping/game/global"
+	"github.com/xiaomingping/game/iface"
 
 	"go.uber.org/zap"
 )

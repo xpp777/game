@@ -1,8 +1,8 @@
 package global
 
 import (
-	"game/config"
-	"game/iface"
+	"github.com/xiaomingping/game/config"
+	"github.com/xiaomingping/game/iface"
 )
 
 var (
