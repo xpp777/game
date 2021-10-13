@@ -98,7 +98,6 @@ func (connMgr *ConnManager) PingAuth() {
 					conn.Stop()
 				}
 			}
-			ticker.Reset(time.Second * time.Duration(global.Config.PingTime))
 		}
 	}
 

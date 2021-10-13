@@ -44,7 +44,7 @@ func NewConnection(conn *websocket.Conn, connID int64, msgHandler iface.MsgHandl
 		ConnID:        connID,
 		isClosed:      false,
 		MsgHandler:    msgHandler,
-		HeartbeatTime: time.Now(),
+		HeartbeatTime: time.Now().Add(time.Second * time.Duration(global.Config.PingTime)),
 		msgChan:       make(chan []byte, global.Config.MaxMsgChanLen),
 	}
 	return c
@@ -186,7 +186,7 @@ func (c *Connection) SendMsg(msgID uint32, data interface{}) error {
 func (c *Connection) SetPingTime() {
 	c.Lock()
 	defer c.Unlock()
-	c.HeartbeatTime = time.Now()
+	c.HeartbeatTime = time.Now().Add(time.Second * time.Duration(global.Config.PingTime))
 }
 
 /**
@@ -195,7 +195,7 @@ func (c *Connection) SetPingTime() {
 func (c *Connection) IsHeartbeatTimeout() (timeout bool) {
 	c.RLock()
 	defer c.RUnlock()
-	if time.Now().Before(c.HeartbeatTime.Add(time.Second * 30)) {
+	if time.Now().After(c.HeartbeatTime) {
 		timeout = true
 	}
 	return
