@@ -2,12 +2,10 @@ package netw
 
 import (
 	"fmt"
-	"net/http"
-	"sync/atomic"
-	"time"
-
 	"github.com/xiaomingping/game/global"
 	"github.com/xiaomingping/game/iface"
+	"net/http"
+	"sync/atomic"
 
 	"go.uber.org/zap"
 
@@ -26,6 +24,7 @@ var upgrader = websocket.Upgrader{
 
 // Server 接口实现，定义一个Server服务类
 type Server struct {
+	sesIDGen int64 // 记录已经生成的会话ID流水号
 	// 当前Server的消息管理模块，用来绑定MsgID和对应的处理方法
 	msgHandler iface.MsgHandle
 	// 当前Server的链接管理器
@@ -58,8 +57,7 @@ func NewServer(opt Option) iface.Server {
 // Start 开启网络服务
 func (s *Server) Start(c *gin.Context) {
 	// 生成用户连接id
-	curConnId := time.Now().UnixNano()
-	connId := atomic.AddInt64(&curConnId, 1)
+	id := atomic.AddInt64(&s.sesIDGen, 1)
 	// 等待客户端建立连接请求
 	var (
 		err      error
@@ -73,7 +71,7 @@ func (s *Server) Start(c *gin.Context) {
 		return
 	}
 	// 处理该新连接请求的 业务 方法， 此时应该有 handler 和 conn是绑定的
-	dealConn := NewConnection(wsSocket, connId, s.msgHandler)
+	dealConn := NewConnection(wsSocket, id, s.msgHandler)
 	// 将新创建的Conn添加到链接管理中
 	global.Server.GetConnMgr().Add(dealConn)
 	// 启动当前链接的处理业务

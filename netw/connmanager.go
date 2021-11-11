@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xiaomingping/game/global"
 	"github.com/xiaomingping/game/iface"
 )
 
@@ -88,7 +87,7 @@ func (connMgr *ConnManager) ClearOneConn(connID int64) {
 
 // 心跳检测
 func (connMgr *ConnManager) PingAuth() {
-	ticker := time.NewTicker(time.Second * time.Duration(global.Config.PingTime))
+	ticker := time.NewTicker(time.Second * 1)
 	for {
 		select {
 		case <-ticker.C:

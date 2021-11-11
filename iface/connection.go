@@ -20,4 +20,8 @@ type Connection interface {
 	SendMsg(msgID uint32, data interface{}) error // 直接将Message数据发送数据给远程的客户端
 	SetPingTime()                                 // 设置心跳
 	IsHeartbeatTimeout() (timeout bool)           // 检测心跳
+
+	SetProperty(key string, value interface{}) 		//设置链接属性
+	GetProperty(key string) (interface{}, error)	//获取链接属性
+	RemoveProperty(key string) 						//移除链接属性
 }

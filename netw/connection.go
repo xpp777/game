@@ -32,6 +32,10 @@ type Connection struct {
 	//缓冲管道，用于写goroutine之间的消息通信
 	msgChan chan []byte
 	sync.RWMutex
+	//链接属性
+	property map[string]interface{}
+	////保护当前property的锁
+	propertyLock sync.Mutex
 	// 当前连接的关闭状态
 	isClosed bool
 }
@@ -46,6 +50,7 @@ func NewConnection(conn *websocket.Conn, connID int64, msgHandler iface.MsgHandl
 		MsgHandler:    msgHandler,
 		HeartbeatTime: time.Now().Add(time.Second * time.Duration(global.Config.PingTime)),
 		msgChan:       make(chan []byte, global.Config.MaxMsgChanLen),
+		property:nil,
 	}
 	return c
 }
@@ -94,7 +99,6 @@ func (c *Connection) StartReader() {
 				conn: c,
 				msg:  msg,
 			}
-			c.SetPingTime()
 			if global.Config.WorkerPoolSize > 0 {
 				// 已经启动工作池机制，将消息交给Worker处理
 				c.MsgHandler.SendMsgToTaskQueue(&req)
@@ -180,6 +184,37 @@ func (c *Connection) SendMsg(msgID uint32, data interface{}) error {
 	// 写回客户端
 	c.msgChan <- msg
 	return nil
+}
+
+//SetProperty 设置链接属性
+func (c *Connection) SetProperty(key string, value interface{}) {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+	if c.property == nil {
+		c.property = make(map[string]interface{})
+	}
+
+	c.property[key] = value
+}
+
+//GetProperty 获取链接属性
+func (c *Connection) GetProperty(key string) (interface{}, error) {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+
+	if value, ok := c.property[key]; ok {
+		return value, nil
+	}
+
+	return nil, errors.New("no property found")
+}
+
+//RemoveProperty 移除链接属性
+func (c *Connection) RemoveProperty(key string) {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+
+	delete(c.property, key)
 }
 
 // 设置心跳时间
