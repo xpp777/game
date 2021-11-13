@@ -1,8 +1,6 @@
 package netw
 
 import (
-	"fmt"
-	"github.com/xiaomingping/game/global"
 	"github.com/xiaomingping/game/iface"
 	"net/http"
 	"sync/atomic"
@@ -13,14 +11,17 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
+var (
+	Upgrader = websocket.Upgrader{
 	ReadBufferSize:    4096,
 	WriteBufferSize:   4096,
 	EnableCompression: true,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
-}
+	}
+	GlobalServer iface.Server
+)
 
 // Server 接口实现，定义一个Server服务类
 type Server struct {
@@ -33,22 +34,22 @@ type Server struct {
 	OnConnStart func(conn iface.Connection)
 	// 该Server的连接断开时的Hook函数
 	OnConnStop func(conn iface.Connection)
-
 	packet iface.Packet
 }
 
 // NewServer 创建一个服务器句柄
-func NewServer(opt Option) iface.Server {
+func NewServer(opt ...Option) iface.Server {
 	s := &Server{
 		msgHandler: NewMsgHandle(),
 		ConnMgr:    NewConnManager(),
 		packet:     NewDataPack(),
 	}
-	opt(s)
+	for _, option := range opt {
+		option(s)
+	}
 	s.msgHandler.StartWorkerPool()
 	go s.ConnMgr.PingAuth()
-	global.Server = s
-	fmt.Printf("%s\n", global.Logo)
+	GlobalServer = s
 	return s
 }
 
@@ -63,24 +64,22 @@ func (s *Server) Start(c *gin.Context) {
 		err      error
 		wsSocket *websocket.Conn
 	)
-	if wsSocket, err = upgrader.Upgrade(c.Writer, c.Request, nil); err != nil {
+	if wsSocket, err = Upgrader.Upgrade(c.Writer, c.Request, nil); err != nil {
 		return
 	}
-	if s.ConnMgr.Len() >= global.Config.MaxConn {
+	if s.ConnMgr.Len() >= config.MaxConn {
 		wsSocket.Close()
 		return
 	}
 	// 处理该新连接请求的 业务 方法， 此时应该有 handler 和 conn是绑定的
-	dealConn := NewConnection(wsSocket, id, s.msgHandler)
-	// 将新创建的Conn添加到链接管理中
-	global.Server.GetConnMgr().Add(dealConn)
+	dealConn := NewConnection(s,wsSocket, id, s.msgHandler)
 	// 启动当前链接的处理业务
 	dealConn.Start()
 }
 
 // Stop 停止服务
 func (s *Server) Stop() {
-	zap.S().Info("[STOP] server name ", global.Config.Name)
+	zap.S().Info("[STOP] server...")
 	// 将其他需要清理的连接信息或者其他信息 也要一并停止或者清理
 	s.ConnMgr.ClearConn()
 }

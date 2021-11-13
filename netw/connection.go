@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xiaomingping/game/global"
+
 	"github.com/xiaomingping/game/iface"
 
 	"go.uber.org/zap"
@@ -17,6 +17,8 @@ import (
 
 // Connection 链接
 type Connection struct {
+	//当前Conn属于哪个Server
+	Server iface.Server
 	// 当前连接的socket 套接字
 	Conn *websocket.Conn
 	// 当前连接的ID 也可以称作为SessionID，ID全局唯一
@@ -41,17 +43,20 @@ type Connection struct {
 }
 
 // NewConnection 创建连接的方法
-func NewConnection(conn *websocket.Conn, connID int64, msgHandler iface.MsgHandle) *Connection {
+func NewConnection(s iface.Server,conn *websocket.Conn, connID int64, msgHandler iface.MsgHandle) *Connection {
 	// 初始化Conn属性
 	c := &Connection{
+		Server: s,
 		Conn:          conn,
 		ConnID:        connID,
 		isClosed:      false,
 		MsgHandler:    msgHandler,
-		HeartbeatTime: time.Now().Add(time.Second * time.Duration(global.Config.PingTime)),
-		msgChan:       make(chan []byte, global.Config.MaxMsgChanLen),
+		HeartbeatTime: time.Now().Add(time.Second * time.Duration(config.PingTime)),
+		msgChan:       make(chan []byte, 1),
 		property:nil,
 	}
+	// 将新创建的Conn添加到链接管理中
+	c.Server.GetConnMgr().Add(c)
 	return c
 }
 
@@ -63,7 +68,7 @@ func (c *Connection) StartWriter() {
 		select {
 		case data := <-c.msgChan:
 			// 有数据要写给客户端
-			if err := c.Conn.WriteMessage(global.Config.MessageType, data); err != nil {
+			if err := c.Conn.WriteMessage(config.MessageType, data); err != nil {
 				zap.S().Error("Send Data error:, ", err, " Conn Writer exit")
 				return
 			}
@@ -84,12 +89,16 @@ func (c *Connection) StartReader() {
 			return
 		default:
 			// 读取客户端的Msg
-			_, msgData, err := c.Conn.ReadMessage()
+			t, msgData, err := c.Conn.ReadMessage()
 			if err != nil {
 				goto Wrr
 			}
+			if t != config.MessageType {
+				c.Stop()
+				continue
+			}
 			// 拆包，得到msgID 和 data 放在msg中
-			msg, err := global.Server.Packet().Unpack(msgData)
+			msg, err := c.Server.Packet().Unpack(msgData)
 			if err != nil {
 				zap.S().Error("unpack error ", err)
 				goto Wrr
@@ -99,7 +108,7 @@ func (c *Connection) StartReader() {
 				conn: c,
 				msg:  msg,
 			}
-			if global.Config.WorkerPoolSize > 0 {
+			if config.WorkerPoolSize > 0 {
 				// 已经启动工作池机制，将消息交给Worker处理
 				c.MsgHandler.SendMsgToTaskQueue(&req)
 			} else {
@@ -120,7 +129,7 @@ func (c *Connection) Start() {
 	// 2 开启用于写回客户端数据流程的Goroutine
 	go c.StartWriter()
 	// 按照用户传递进来的创建连接时需要处理的业务，执行钩子方法
-	global.Server.CallOnConnStart(c)
+	c.Server.CallOnConnStart(c)
 }
 
 // 停止连接，结束当前连接状态M
@@ -128,7 +137,7 @@ func (c *Connection) Stop() {
 	c.Lock()
 	defer c.Unlock()
 	// 如果用户注册了该链接的关闭回调业务，那么在此刻应该显示调用
-	global.Server.CallOnConnStop(c)
+	c.Server.CallOnConnStop(c)
 	// 如果当前链接已经关闭
 	if c.isClosed == true {
 		return
@@ -144,7 +153,7 @@ func (c *Connection) Stop() {
 	// 设置标志位
 	c.isClosed = true
 	// 将链接从连接管理器中删除
-	global.Server.GetConnMgr().Remove(c)
+	c.Server.GetConnMgr().Remove(c)
 }
 
 // 返回ctx，用于用户自定义的go程获取连接退出状态
@@ -170,12 +179,12 @@ func (c *Connection) RemoteAddr() net.Addr {
 // 直接将Message数据发送数据给远程的客户端
 func (c *Connection) SendMsg(msgID uint32, data interface{}) error {
 	c.RLock()
-	defer c.RUnlock()
 	if c.isClosed == true {
 		return errors.New("connection closed when send msg")
 	}
+	c.RUnlock()
 	// 将data封包，并且发送
-	dp := global.Server.Packet()
+	dp := c.Server.Packet()
 	msg, err := dp.Pack(NewMsgPackage(msgID, data))
 	if err != nil {
 		zap.S().Error("pack error msg ID = ", msgID)
@@ -221,7 +230,7 @@ func (c *Connection) RemoveProperty(key string) {
 func (c *Connection) SetPingTime() {
 	c.Lock()
 	defer c.Unlock()
-	c.HeartbeatTime = time.Now().Add(time.Second * time.Duration(global.Config.PingTime))
+	c.HeartbeatTime = time.Now().Add(time.Second * time.Duration(config.PingTime))
 }
 
 /**

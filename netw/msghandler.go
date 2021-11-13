@@ -3,7 +3,6 @@ package netw
 import (
 	"strconv"
 
-	"github.com/xiaomingping/game/global"
 	"github.com/xiaomingping/game/iface"
 
 	"go.uber.org/zap"
@@ -20,9 +19,9 @@ type MsgHandle struct {
 func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
 		Apis:           make(map[uint32]iface.Router),
-		WorkerPoolSize: global.Config.WorkerPoolSize,
+		WorkerPoolSize: config.WorkerPoolSize,
 		// 一个worker对应一个queue
-		TaskQueue: make([]chan iface.Request, global.Config.WorkerPoolSize),
+		TaskQueue: make([]chan iface.Request, config.WorkerPoolSize),
 	}
 }
 
@@ -53,7 +52,7 @@ func (mh MsgHandle) StartWorkerPool() {
 	for i := 0; i < int(mh.WorkerPoolSize); i++ {
 		// 一个worker被启动
 		// 给当前worker对应的任务队列开辟空间
-		mh.TaskQueue[i] = make(chan iface.Request, global.Config.MaxWorkerTaskLen)
+		mh.TaskQueue[i] = make(chan iface.Request, 1)
 		// 启动当前Worker，阻塞的等待对应的任务队列是否有消息传递进来
 		go mh.StartOneWorker(i, mh.TaskQueue[i])
 	}
