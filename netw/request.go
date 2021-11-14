@@ -14,7 +14,7 @@ func (r *Request) GetConnection() iface.Connection {
 }
 
 //GetData 获取请求消息的数据
-func (r *Request) GetData() interface{} {
+func (r *Request) GetData() []byte {
 	return r.msg.GetData()
 }
 

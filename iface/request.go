@@ -6,6 +6,6 @@ package iface
 */
 type Request interface {
 	GetConnection() Connection // 获取请求连接信息
-	GetData() interface{}      // 获取请求消息的数据
+	GetData() []byte      // 获取请求消息的数据
 	GetMsgID() uint32          // 获取请求的消息ID
 }
