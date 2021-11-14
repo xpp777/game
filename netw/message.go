@@ -2,12 +2,12 @@ package netw
 
 //Message 消息
 type Message struct {
-	ID   uint32      `json:"msgId"`          //消息的ID
-	Data interface{} `json:"data,omitempty"` //消息的内容
+	ID   uint32 //消息的ID
+	Data []byte //消息的内容
 }
 
 //NewMsgPackage 创建一个Message消息包
-func NewMsgPackage(ID uint32, data interface{}) *Message {
+func NewMsgPackage(ID uint32, data []byte) *Message {
 	return &Message{
 		ID:   ID,
 		Data: data,
@@ -20,7 +20,7 @@ func (msg *Message) GetMsgID() uint32 {
 }
 
 //GetData 获取消息内容
-func (msg *Message) GetData() interface{} {
+func (msg *Message) GetData() []byte {
 	return msg.Data
 }
 
@@ -30,6 +30,6 @@ func (msg *Message) SetMsgID(msgID uint32) {
 }
 
 //SetData 设计消息内容
-func (msg *Message) SetData(data interface{}) {
+func (msg *Message) SetData(data []byte) {
 	msg.Data = data
 }

@@ -5,8 +5,8 @@ package iface
 */
 type Message interface {
 	GetMsgID() uint32     // 获取消息ID
-	GetData() interface{} // 获取消息内容
+	GetData() []byte // 获取消息内容
 
 	SetMsgID(uint32)     // 设置消息ID
-	SetData(interface{}) // 设置消息内容
+	SetData([]byte) // 设置消息内容
 }

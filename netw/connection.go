@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-
 	"github.com/xiaomingping/game/iface"
 
 	"go.uber.org/zap"
@@ -177,7 +176,7 @@ func (c *Connection) RemoteAddr() net.Addr {
 }
 
 // 直接将Message数据发送数据给远程的客户端
-func (c *Connection) SendMsg(msgID uint32, data interface{}) error {
+func (c *Connection) SendMsg(msgID uint32, data []byte) error {
 	c.RLock()
 	if c.isClosed == true {
 		return errors.New("connection closed when send msg")

@@ -17,7 +17,7 @@ type Connection interface {
 	GetConnection() *websocket.Conn               // 从当前连接获取原始的socket Conn
 	GetConnID() int64                             // 获取当前连接ID
 	RemoteAddr() net.Addr                         // 获取远程客户端地址信息
-	SendMsg(msgID uint32, data interface{}) error // 直接将Message数据发送数据给远程的客户端
+	SendMsg(msgID uint32, data []byte) error // 直接将Message数据发送数据给远程的客户端
 	SetPingTime()                                 // 设置心跳
 	IsHeartbeatTimeout() (timeout bool)           // 检测心跳
 
