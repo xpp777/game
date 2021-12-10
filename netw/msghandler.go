@@ -44,7 +44,6 @@ func (mh MsgHandle) AddRouter(msgID uint32, router iface.Router) {
 	}
 	// 2 添加msg与api的绑定关系
 	mh.Apis[msgID] = router
-	zap.S().Debug("Add api msgID = ", msgID)
 }
 
 func (mh MsgHandle) StartWorkerPool() {
@@ -62,7 +61,6 @@ func (mh MsgHandle) SendMsgToTaskQueue(request iface.Request) {
 	// 轮询的平均分配法则
 	// 得到需要处理此条连接的workerID
 	workerID := uint32(request.GetConnection().GetConnID()) % mh.WorkerPoolSize
-	zap.S().Debug("Add ConnID=", request.GetConnection().GetConnID(), " request msgID=", request.GetMsgID(), "  to workerID=", workerID)
 	// 将请求消息发送给任务队列
 	mh.TaskQueue[workerID] <- request
 }
