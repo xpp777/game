@@ -3,7 +3,12 @@
 ## 使用方式:
 
 ```
-	global.Config = config.C
+	netw.SetConfig(&iface.Config{
+		PingTime:       30,
+		MaxConn:        100000,
+		WorkerPoolSize: 10,
+		MessageType:    2,
+	})
 	s := netw.NewServer(netw.WithPacket(pack.NewDataPack()))
 	s.AddRouter(0, &router.PingRouter{})
 	gin.SetMode(gin.ReleaseMode)

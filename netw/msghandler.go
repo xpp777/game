@@ -26,6 +26,11 @@ func NewMsgHandle() *MsgHandle {
 }
 
 func (mh MsgHandle) DoMsgHandler(request iface.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error("Call err: ", err)
+		}
+	}()
 	handler, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
 		zap.S().Error("api msgID = ", request.GetMsgID(), " is not FOUND!")
