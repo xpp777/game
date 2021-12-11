@@ -10,6 +10,5 @@ type ConnManager interface {
 	Get(connID int64) (Connection, error) // 利用ConnID获取链接
 	Len() int                             // 获取链接数量
 	Search(Search)                        // 查找连接
-	PingAuth()                            // 心跳检测
 	ClearConn()                           // 删除并停止所有链接
 }

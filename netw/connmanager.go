@@ -2,10 +2,8 @@ package netw
 
 import (
 	"errors"
-	"sync"
-	"time"
-
 	"github.com/xiaomingping/game/iface"
+	"sync"
 )
 
 // ConnManager 连接管理模块
@@ -83,21 +81,4 @@ func (connMgr *ConnManager) ClearOneConn(connID int64) {
 		return
 	}
 	return
-}
-
-// 心跳检测
-func (connMgr *ConnManager) PingAuth() {
-	ticker := time.NewTicker(time.Second * 1)
-	for {
-		select {
-		case <-ticker.C:
-			// 停止并删除全部的连接信息
-			for _, conn := range connMgr.connections {
-				if conn.IsHeartbeatTimeout() {
-					conn.Stop()
-				}
-			}
-		}
-	}
-
 }

@@ -2,6 +2,7 @@ package netw
 
 import (
 	"github.com/xiaomingping/game/iface"
+	"github.com/xiaomingping/ztimer"
 	"net/http"
 	"sync/atomic"
 
@@ -13,14 +14,15 @@ import (
 
 var (
 	Upgrader = websocket.Upgrader{
-	ReadBufferSize:    4096,
-	WriteBufferSize:   4096,
-	EnableCompression: true,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+		ReadBufferSize:    4096,
+		WriteBufferSize:   4096,
+		EnableCompression: true,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
 	}
 	GlobalServer iface.Server
+	ZTimer       = ztimer.NewAutoExecTimerScheduler()
 )
 
 // Server 接口实现，定义一个Server服务类
@@ -34,7 +36,7 @@ type Server struct {
 	OnConnStart func(conn iface.Connection)
 	// 该Server的连接断开时的Hook函数
 	OnConnStop func(conn iface.Connection)
-	packet iface.Packet
+	packet     iface.Packet
 }
 
 // NewServer 创建一个服务器句柄
@@ -48,7 +50,6 @@ func NewServer(opt ...Option) iface.Server {
 		option(s)
 	}
 	s.msgHandler.StartWorkerPool()
-	go s.ConnMgr.PingAuth()
 	GlobalServer = s
 	return s
 }
@@ -57,8 +58,6 @@ func NewServer(opt ...Option) iface.Server {
 
 // Start 开启网络服务
 func (s *Server) Start(c *gin.Context) {
-	// 生成用户连接id
-	id := atomic.AddInt64(&s.sesIDGen, 1)
 	// 等待客户端建立连接请求
 	var (
 		err      error
@@ -72,7 +71,7 @@ func (s *Server) Start(c *gin.Context) {
 		return
 	}
 	// 处理该新连接请求的 业务 方法， 此时应该有 handler 和 conn是绑定的
-	dealConn := NewConnection(s,wsSocket, id, s.msgHandler)
+	dealConn := NewConnection(s, wsSocket, atomic.AddInt64(&s.sesIDGen, 1), s.msgHandler)
 	// 启动当前链接的处理业务
 	dealConn.Start()
 }

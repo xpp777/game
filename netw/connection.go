@@ -3,6 +3,7 @@ package netw
 import (
 	"context"
 	"errors"
+	"github.com/xiaomingping/ztimer"
 	"net"
 	"sync"
 	"time"
@@ -42,20 +43,21 @@ type Connection struct {
 }
 
 // NewConnection 创建连接的方法
-func NewConnection(s iface.Server,conn *websocket.Conn, connID int64, msgHandler iface.MsgHandle) *Connection {
+func NewConnection(s iface.Server, conn *websocket.Conn, connID int64, msgHandler iface.MsgHandle) *Connection {
 	// 初始化Conn属性
 	c := &Connection{
-		Server: s,
+		Server:        s,
 		Conn:          conn,
 		ConnID:        connID,
 		isClosed:      false,
 		MsgHandler:    msgHandler,
 		HeartbeatTime: time.Now().Add(time.Second * time.Duration(config.PingTime)),
 		msgChan:       make(chan []byte, 1),
-		property:nil,
+		property:      nil,
 	}
 	// 将新创建的Conn添加到链接管理中
 	c.Server.GetConnMgr().Add(c)
+	c.SetPingTime()
 	return c
 }
 
@@ -123,12 +125,12 @@ Wrr:
 // 启动连接，让当前连接开始工作
 func (c *Connection) Start() {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
-	// 1 开启用户从客户端读取数据流程的Goroutine
-	go c.StartReader()
-	// 2 开启用于写回客户端数据流程的Goroutine
+	// 1 开启用于写回客户端数据流程的Goroutine
 	go c.StartWriter()
 	// 按照用户传递进来的创建连接时需要处理的业务，执行钩子方法
 	c.Server.CallOnConnStart(c)
+	// 2 开启用户从客户端读取数据流程的Goroutine
+	c.StartReader()
 }
 
 // 停止连接，结束当前连接状态M
@@ -227,9 +229,25 @@ func (c *Connection) RemoveProperty(key string) {
 
 // 设置心跳时间
 func (c *Connection) SetPingTime() {
+	PingTime := time.Second * time.Duration(config.PingTime)
 	c.Lock()
-	defer c.Unlock()
-	c.HeartbeatTime = time.Now().Add(time.Second * time.Duration(config.PingTime))
+	c.HeartbeatTime = time.Now().Add(PingTime)
+	foo := ztimer.NewDelayFunc(DelayFunc, []interface{}{c.ConnID})
+	ZTimer.CreateTimerAfter(foo, PingTime)
+	c.Unlock()
+}
+
+// 心跳延时检查
+func DelayFunc(v ...interface{}) {
+	if ConnID, ok := v[0].(int64); ok {
+		conn, err := GlobalServer.GetConnMgr().Get(ConnID)
+		if err != nil {
+			return
+		}
+		if conn.IsHeartbeatTimeout() {
+			conn.Stop()
+		}
+	}
 }
 
 /**
