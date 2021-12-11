@@ -26,7 +26,7 @@ type Connection struct {
 	// 消息管理MsgID和对应处理方法的消息管理模块
 	MsgHandler iface.MsgHandle
 	// 用户上次心跳时间
-	HeartbeatTime time.Time
+	Heartbeat bool
 	// 告知该链接已经退出/停止的channel
 	ctx context.Context
 
@@ -46,18 +46,18 @@ type Connection struct {
 func NewConnection(s iface.Server, conn *websocket.Conn, connID int64, msgHandler iface.MsgHandle) *Connection {
 	// 初始化Conn属性
 	c := &Connection{
-		Server:        s,
-		Conn:          conn,
-		ConnID:        connID,
-		isClosed:      false,
-		MsgHandler:    msgHandler,
-		HeartbeatTime: time.Now().Add(time.Second * time.Duration(config.PingTime)),
-		msgChan:       make(chan []byte, 1),
-		property:      nil,
+		Server:     s,
+		Conn:       conn,
+		ConnID:     connID,
+		isClosed:   false,
+		MsgHandler: msgHandler,
+		Heartbeat:  false,
+		msgChan:    make(chan []byte, 1),
+		property:   nil,
 	}
 	// 将新创建的Conn添加到链接管理中
 	c.Server.GetConnMgr().Add(c)
-	c.SetPingTime()
+	c.IsHeartbeatTimeout()
 	return c
 }
 
@@ -228,12 +228,21 @@ func (c *Connection) RemoveProperty(key string) {
 }
 
 // 设置心跳时间
-func (c *Connection) SetPingTime() {
-	PingTime := time.Second * time.Duration(config.PingTime)
+func (c *Connection) SetPing() {
 	c.Lock()
-	c.HeartbeatTime = time.Now().Add(PingTime)
-	foo := ztimer.NewDelayFunc(DelayFunc, []interface{}{c.ConnID})
-	ZTimer.CreateTimerAfter(foo, PingTime)
+	c.Heartbeat = true
+	c.Unlock()
+}
+
+// 获取心跳
+func (c *Connection) GetPing() bool {
+	return c.Heartbeat
+}
+
+// 取消心跳
+func (c *Connection) RemovePing() {
+	c.Lock()
+	c.Heartbeat = false
 	c.Unlock()
 }
 
@@ -244,8 +253,11 @@ func DelayFunc(v ...interface{}) {
 		if err != nil {
 			return
 		}
-		if conn.IsHeartbeatTimeout() {
+		if conn.GetPing() {
 			conn.Stop()
+		} else {
+			conn.RemovePing()
+			conn.IsHeartbeatTimeout()
 		}
 	}
 }
@@ -253,11 +265,9 @@ func DelayFunc(v ...interface{}) {
 /**
 心跳超时
 */
-func (c *Connection) IsHeartbeatTimeout() (timeout bool) {
-	c.RLock()
-	defer c.RUnlock()
-	if time.Now().After(c.HeartbeatTime) {
-		timeout = true
-	}
+func (c *Connection) IsHeartbeatTimeout() {
+	PingTime := time.Second * time.Duration(config.PingTime)
+	foo := ztimer.NewDelayFunc(DelayFunc, []interface{}{c.ConnID})
+	ZTimer.CreateTimerAfter(foo, PingTime)
 	return
 }
