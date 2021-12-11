@@ -2,8 +2,8 @@ package netw
 
 //Message 消息
 type Message struct {
-	ID   uint32 //消息的ID
-	Data []byte //消息的内容
+	ID   uint32 `json:"msgId"` //消息的ID
+	Data []byte `json:"data"` //消息的内容
 }
 
 //NewMsgPackage 创建一个Message消息包

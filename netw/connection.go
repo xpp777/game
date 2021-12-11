@@ -131,6 +131,7 @@ func (c *Connection) Start() {
 	c.Server.CallOnConnStart(c)
 	// 2 开启用户从客户端读取数据流程的Goroutine
 	c.StartReader()
+
 }
 
 // 停止连接，结束当前连接状态M
@@ -253,12 +254,13 @@ func DelayFunc(v ...interface{}) {
 		if err != nil {
 			return
 		}
-		if conn.GetPing() {
+		if !conn.GetPing() {
 			conn.Stop()
 		} else {
 			conn.RemovePing()
 			conn.IsHeartbeatTimeout()
 		}
+
 	}
 }
 
@@ -266,7 +268,7 @@ func DelayFunc(v ...interface{}) {
 心跳超时
 */
 func (c *Connection) IsHeartbeatTimeout() {
-	PingTime := time.Second * time.Duration(config.PingTime)
+	PingTime := time.Second * time.Duration(config.PingTime + 1)
 	foo := ztimer.NewDelayFunc(DelayFunc, []interface{}{c.ConnID})
 	ZTimer.CreateTimerAfter(foo, PingTime)
 	return
