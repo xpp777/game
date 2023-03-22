@@ -2,7 +2,7 @@ package netw
 
 import (
 	"errors"
-	"github.com/xiaomingping/game/iface"
+	"github.com/xpp777/game/iface"
 	"sync"
 )
 

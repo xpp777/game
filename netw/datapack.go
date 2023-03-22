@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/xiaomingping/game/iface"
+	"github.com/xpp777/game/iface"
 )
 
 //DataPack 封包拆包类实例，暂时不需要成员

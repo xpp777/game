@@ -1,8 +1,8 @@
 package netw
 
 import (
-	"github.com/xiaomingping/game/iface"
-	"github.com/xiaomingping/ztimer"
+	"github.com/xpp777/game/iface"
+	"github.com/xpp777/ztimer"
 	"net/http"
 	"sync/atomic"
 

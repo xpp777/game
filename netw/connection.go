@@ -3,12 +3,12 @@ package netw
 import (
 	"context"
 	"errors"
-	"github.com/xiaomingping/ztimer"
+	"github.com/xpp777/ztimer"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/xiaomingping/game/iface"
+	"github.com/xpp777/game/iface"
 
 	"go.uber.org/zap"
 
@@ -268,7 +268,7 @@ func DelayFunc(v ...interface{}) {
 心跳超时
 */
 func (c *Connection) IsHeartbeatTimeout() {
-	PingTime := time.Second * time.Duration(config.PingTime + 1)
+	PingTime := time.Second * time.Duration(config.PingTime+1)
 	foo := ztimer.NewDelayFunc(DelayFunc, []interface{}{c.ConnID})
 	ZTimer.CreateTimerAfter(foo, PingTime)
 	return

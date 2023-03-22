@@ -1,12 +1,11 @@
 package netw
 
-import "github.com/xiaomingping/game/iface"
+import "github.com/xpp777/game/iface"
 
 var (
-	config  *iface.Config
+	config *iface.Config
 )
 
-func SetConfig(c *iface.Config)  {
+func SetConfig(c *iface.Config) {
 	config = c
 }
-

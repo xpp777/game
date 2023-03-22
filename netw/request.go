@@ -1,6 +1,6 @@
 package netw
 
-import "github.com/xiaomingping/game/iface"
+import "github.com/xpp777/game/iface"
 
 //Request 请求
 type Request struct {

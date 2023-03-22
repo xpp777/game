@@ -1,6 +1,6 @@
 package netw
 
-import "github.com/xiaomingping/game/iface"
+import "github.com/xpp777/game/iface"
 
 type Option func(s *Server)
 
